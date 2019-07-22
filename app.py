@@ -1,11 +1,13 @@
-from flask import Flask, request, jsonify
+from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_restplus import Api, Resource, abort
 from flask_marshmallow import Marshmallow
+from flask_migrate import Migrate
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 ma = Marshmallow(app)
 api = Api(app)
 
@@ -53,6 +55,7 @@ class SchoolDetail(Resource):
 
 @api.route('/school/new')
 class SchoolCreate(Resource):
+    @api.expect(School, validate=True)
     def post(self):
         school_schema = SchoolSchema()
         school = school_schema.load(api.payload)
@@ -61,11 +64,12 @@ class SchoolCreate(Resource):
             db.session.commit()
         except Exception as e:
             abort(400, 'School Not Created', error="{}".format(e))
-        return {'school': api.payload}
+        school_return = school_schema.dump(School.query.filter_by(**api.payload).first()).data
+        return {'school': school_return}, 201
 
 
 @api.route('/school/<int:pk>/update')
-class SchoolCreate(Resource):
+class SchoolUpdate(Resource):
     def post(self, pk):
         school = School.query.get(pk)
         if not school:
@@ -78,10 +82,12 @@ class SchoolCreate(Resource):
             db.session.commit()
         except Exception as e:
             abort(400, 'School Not Updated', error="{}".format(e))
-        return {'school': api.payload}
+        school_schema = SchoolSchema()
+        return {'school': school_schema.dump(school).data}
+
 
 @api.route('/school/<int:pk>/delete')
-class SchoolDetail(Resource):
+class SchoolDelete(Resource):
     def get(self, pk):
         school_data = School.query.get(pk)
         if not school_data:
@@ -95,4 +101,4 @@ class SchoolDetail(Resource):
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True)
