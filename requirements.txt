@@ -14,7 +14,7 @@ Mako==1.0.14
 MarkupSafe==1.1.1
 marshmallow==2.19.5
 marshmallow-sqlalchemy==0.17.0
-PyJWT==1.7.1
+PyJWT==2.4.0
 pyrsistent==0.15.3
 python-dateutil==2.8.0
 python-editor==1.0.4
